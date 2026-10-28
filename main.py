@@ -12,12 +12,10 @@ import matplotlib.pyplot as plt
 import argparse
 from torchvision.utils import make_grid
 
-from model import ConvAutoencoder, UNet, AutoEncoder, VAE, AE_SNN
 from config import parse_args
 from data_preprocess import DatasetProcessor
 from utils import vis_batch, vae_loss, validate_model, select_model, save_metrics, export_to_onnx
 
-os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 # Set device for training
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -72,6 +70,7 @@ class TrainingProcessor:
         # 设定初始的最佳损失为一个很大的值
         best_loss = float('inf')
         train_loss = float('inf')
+        current_epoch = 0
 
         # Training loop
         # 1.input to model,
@@ -117,8 +116,8 @@ class TrainingProcessor:
                   f'Time Costing {time.time() - a:.3f}')
 
             # 如果当前的验证损失低于最佳损失，则保存模型参数
-            if avg_val_loss < best_loss and loss < train_loss:
-                train_loss = loss
+            if avg_val_loss < best_loss:
+                train_loss = loss.item()
                 best_loss = avg_val_loss
                 current_epoch =epoch
                 torch.save(model.state_dict(), f'{self.log_dir}/best_model.pth')

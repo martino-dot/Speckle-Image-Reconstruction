@@ -25,7 +25,7 @@ def current_datetime():
 def load_model(model_path, model_type, device):
     """ Load the saved model from a given path """
     model = select_model(model_type, device)
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     return model
 
@@ -135,9 +135,9 @@ def evaluate_model(model, model_type, dataloader, device, normalize_factor, log_
     avg_psnr = psnr_total / num_samples
 
     # Save all metrics to CSV file
-    metrics_file = os.path.join(log_dir.split('/')[0], log_dir.split('/')[1],
-                                f'1.ssim&psnr',
-                                f'{model_type}_ssim_psnr.csv')
+    metrics_dir = os.path.join(log_dir, '1.ssim&psnr')
+    os.makedirs(metrics_dir, exist_ok=True)
+    metrics_file = os.path.join(metrics_dir, f'{model_type}_ssim_psnr.csv')
     save_to_csv(metrics_list, metrics_file, ['Batch Index', 'Image Index', 'SSIM', 'PSNR'])
     save_metrics(avg_ssim, avg_psnr, log_dir)  # Save the metrics to a text file
     return avg_ssim, avg_psnr
@@ -150,14 +150,13 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Load the model !!! Note: replace the mode_type in the config,py first
-    model_path = (f'runs/'
-                  f'Multi_64_64_0.2_0.1/'
-                  f'Att_UNet_64_0.001_48_90_0.1&0.2_2024-08-15__21-28-29/'
-                  f'{args.model_type}.pth')
+    if args.model_path is None:
+        raise SystemExit('Pass --model_path runs/<your_run>/best_model.pth')
+    model_path = args.model_path
     model = load_model(model_path, args.model_type, device)
 
-    # load log_dir
-    log_dir = f"test/{model_path.split('/')[1]}/{model_path.split('/')[2]}/new_3"
+    # results go to test/<run folder name>
+    log_dir = os.path.join('test', os.path.basename(os.path.dirname(model_path)))
     # Load the dataset
     data_processor = DatasetProcessor(data_path=args.data_dir, batch_size=args.batch_size, log_dir=log_dir,
                                       normalize_factor=args.normalize_factor,

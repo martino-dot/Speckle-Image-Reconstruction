@@ -95,25 +95,17 @@ class DatasetProcessor:
         X_train, X_val, X_test, Y_train, Y_val, Y_test = self.split_data(
             speckle_images, original_images, index, test_size=self.test_size, val_size=self.val_size)
 
-        # Using else dataset as validation dataset
+        # Optional held-out test set (e.g. fiber configurations never seen during training)
         if len(self.data_path) > 3:
-            speckle_X_val = np.load(self.data_path[3])  # load another dataset as validation
-            original_Y_val = np.load(self.data_path[4])
-            index_X_val = np.load(self.data_path[5])
-
-            speckle_X_test = np.load(self.data_path[3])  # load another dataset as test
+            speckle_X_test = np.load(self.data_path[3])
             original_Y_test = np.load(self.data_path[4])
             index_X_test = np.load(self.data_path[5])
 
-            # Normalization and add a dim at first channel
-            speckle_images_val, original_images_val = self.process_images(speckle_X_val, original_Y_val, index_X_val)
-            speckle_images_test, original_images_test = self.process_images(speckle_X_test, original_Y_test, index_X_test)
+            X_test, Y_test = self.process_images(speckle_X_test, original_Y_test, index_X_test)
 
-            # Split dataset into training, validation, and test sets using the custom function
-            X_train, X_val, X_test, Y_train, Y_val, Y_test = self.split_data(
-                speckle_images, original_images, index, test_size=0, val_size=0)
-
-            X_val, X_test, Y_val, Y_test = speckle_images_val, original_images_val, speckle_images_test, original_images_test
+            # Validation still comes from the tail of the training dataset (no test split from it)
+            X_train, X_val, _, Y_train, Y_val, _ = self.split_data(
+                speckle_images, original_images, index, test_size=0, val_size=self.val_size)
 
         # Convert np.array to tensors, and then to TensorDataset
         train_dataset = TensorDataset(torch.tensor(X_train), torch.tensor(Y_train))

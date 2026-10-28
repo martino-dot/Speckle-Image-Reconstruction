@@ -7,13 +7,15 @@ def parse_args():
     # Absolute path to the directory of the current script
     script_dir = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser(description='Train a model on speckle image reconstruction.')
-    parser.add_argument('--data_dir', nargs=3, type=str,
+    parser.add_argument('--data_dir', nargs='+', type=str,
                         default=[],
-                        help='Directory where datasets are saved.')
+                        help='3 .npy paths (speckle, original, index) = single dataset split sequentially into '
+                             'train/val/test. 6 paths = the second triple is a HELD-OUT dataset '
+                             '(e.g. unseen fiber configurations) used as the test set.')
 
     parser.add_argument('--model_type', type=str,
                         default='Att_UNet',
-                        choices=['CNN-AE', 'U-net', 'AE', 'VAE', 'AE-SNN', 'Att_UNet', 'HPM_UNet'],  # CNN-AE (in,256) (out,128)
+                        choices=['CNN-AE', 'U-net', 'AE', 'AE-SNN', 'Att_UNet', 'HPM_UNet'],  # CNN-AE (in,256) (out,128)
                         help='Type of model to train. Default is VAE.')
 
     parser.add_argument('--code_length', type=int,
@@ -46,9 +48,12 @@ def parse_args():
                         default=0.1,
                         help='The percentage of validation images to use.')
 
-    parser.add_argument('--vis', type=bool,
+    parser.add_argument('--vis', action=argparse.BooleanOptionalAction,
                         default=True,
                         help='Visualization.')
+
+    parser.add_argument('--model_path', type=str, default=None,
+                        help='Path to a trained .pth file (used by test.py).')
 
     return parser.parse_args()
 
