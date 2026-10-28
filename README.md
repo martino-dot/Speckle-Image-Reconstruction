@@ -6,6 +6,23 @@ Our approach first characterizes the multimode fiber (**MMF**) to retrieve image
 
 <img width="375" alt="image" src="https://github.com/user-attachments/assets/7f54798d-7132-4eb4-8f50-7b47590e0ae5" />
 
+## Example Commands:
+Convert png images to npy:
+```
+python images_to_npy.py --speckle_dir data/speckle --original_dir data/original \ --out_dir data/npy --size 64
+```
+
+Training command:
+```
+python main.py \
+  --data_dir data/train_speckle.npy data/train_original.npy data/train_index.npy \
+  --model_type HPM_UNet \
+  --normalize_factor 256 \
+  --code_length 64 \
+  --epochs 90 \
+  --batch_size 64
+```
+
 
 ## System Requirements
 
